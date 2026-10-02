@@ -1,0 +1,64 @@
+stages:
+  - validate
+  - test
+  - build
+  - terraform
+
+variables:
+  PIP_CACHE_DIR: "$CI_PROJECT_DIR/.cache/pip"
+  DOCKER_TLS_CERTDIR: ""
+
+cache:
+  paths:
+    - .cache/pip/
+
+python-lint-and-test:
+  stage: test
+  image: python:3.12-slim
+  before_script:
+    - pip install --upgrade pip
+    - pip install -r api/requirements.txt
+  script:
+    - python -m compileall api/app
+    - PYTHONPATH=api pytest api/tests -q --junitxml=api/test-results.xml
+  artifacts:
+    when: always
+    reports:
+      junit: api/test-results.xml
+    paths:
+      - api/test-results.xml
+
+node-check:
+  stage: validate
+  image: node:22-alpine
+  script:
+    - cd receiver
+    - npm install
+    - node --check server.js
+    - cd ../mcp-server
+    - npm install
+    - npm run build
+  artifacts:
+    paths:
+      - mcp-server/dist/
+
+terraform-validate:
+  stage: terraform
+  image:
+    name: hashicorp/terraform:1.10
+    entrypoint: [""]
+  script:
+    - cd terraform
+    - terraform init -backend=false
+    - terraform fmt -check -recursive
+    - terraform validate
+
+build-images:
+  stage: build
+  image: docker:27
+  services:
+    - docker:27-dind
+  script:
+    - docker build -t identity-demo-api:$CI_COMMIT_SHORT_SHA api
+    - docker build -t identity-demo-receiver:$CI_COMMIT_SHORT_SHA receiver
+    - docker build -t identity-demo-mcp:$CI_COMMIT_SHORT_SHA mcp-server

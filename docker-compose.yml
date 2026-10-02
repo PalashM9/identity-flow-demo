@@ -1,0 +1,46 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: identity-demo-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+
+  receiver:
+    build: ./receiver
+    container_name: identity-demo-receiver
+    environment:
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+    ports:
+      - "3001:3001"
+
+  api:
+    build: ./api
+    container_name: identity-demo-api
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      API_USERNAME: ${API_USERNAME}
+      API_PASSWORD: ${API_PASSWORD}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET}
+      LOG_LEVEL: ${LOG_LEVEL}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      receiver:
+        condition: service_started
+    ports:
+      - "8000:8000"
+
+volumes:
+  postgres_data:

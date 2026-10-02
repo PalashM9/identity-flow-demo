@@ -1,0 +1,35 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Terraform local state and secrets
+terraform/.terraform/
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/terraform.tfvars
+terraform/.terraform.lock.hcl
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node
+node_modules/
+frontend/node_modules/
+receiver/node_modules/
+mcp-server/node_modules/
+frontend/dist/
+mcp-server/dist/
+
+# Local/generated data
+demo_data/
+postgres_data/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

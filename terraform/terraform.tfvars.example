@@ -1,0 +1,4 @@
+postgres_password = "identity_password_change_me"
+api_username      = "demo_user"
+api_password      = "demo_password_change_me"
+webhook_secret    = "local_webhook_secret_change_me"
